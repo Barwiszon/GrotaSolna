@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Grota Solna</title>
+  <style>
+    /* Reset i tło */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 15px;
+      font-size: 1.8rem;
+      color: #0f172a;
+    }
+
+    /* Nawigacja */
+    .controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .controls button {
+      background: #e2e8f0;
+      color: #0f172a;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-size: 1rem;
+    }
+
+    .controls button:hover {
+      background: #cbd5e1;
+    }
+
+    #monthLabel {
+      font-weight: 600;
+      font-size: 1.2rem;
+    }
+
+    /* Układ kalendarza */
+    .calendar-wrapper {
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .calendar-header {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 5px;
+    }
+
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+
+    .day {
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      min-height: 90px;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, background 0.3s;
+      padding: 6px;
+    }
+
+    .day:hover {
+      transform: scale(1.03);
+    }
+
+    .day-header {
+      font-size: 0.9rem;
+      color: #64748b;
+      text-align: right;
+    }
+
+    .day-content {
+      font-size: 1rem;
+      text-align: center;
+      font-weight: 500;
+      border-radius: 6px;
+      padding: 4px;
+      color: white;
+    }
+
+    /* Kolory osób */
+    .ola {
+      background-color: #f472b6; /* różowy */
+    }
+    .szymon {
+      background-color: #60a5fa; /* niebieski */
+    }
+    .mateusz {
+      background-color: #4ade80; /* zielony */
+      color: #064e3b;
+    }
+
+    /* Responsywność */
+    @media (max-width: 768px) {
+      .calendar {
+        gap: 5px;
+      }
+
+      .day {
+        min-height: 70px;
+        padding: 4px;
+      }
+
+      .day-header {
+        font-size: 0.75rem;
+      }
+
+      .day-content {
+        font-size: 0.85rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .calendar {
+        gap: 4px;
+      }
+
+      .day {
+        min-height: 60px;
+        padding: 3px;
+      }
+
+      .day-header {
+        font-size: 0.7rem;
+      }
+
+      .day-content {
+        font-size: 0.8rem;
+      }
+
+      .controls button {
+        padding: 6px 10px;
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Sprzątanie Groty Solnej</h1>
+
+  <div class="controls">
+    <button id="prevMonth">◀ Poprzedni</button>
+    <div id="monthLabel"></div>
+    <button id="nextMonth">Następny ▶</button>
+  </div>
+
+  <div class="calendar-wrapper">
+    <div class="calendar-header">
+      <div>Pon</div><div>Wt</div><div>Śr</div><div>Czw</div><div>Pt</div><div>Sob</div><div>Nd</div>
+    </div>
+    <div class="calendar" id="calendar"></div>
+  </div>
+
+  <script>
+    const startRotation = new Date(2025, 9, 6); // 6 października 2025
+    const end = new Date(2026, 5, 30); // czerwiec 2026
+    const monthLabel = document.getElementById('monthLabel');
+    const calendarEl = document.getElementById('calendar');
+    let current = new Date(2025, 9, 1); // październik
+
+    const rotations = [
+      ['Ola', 'Szymon'],
+      ['Mateusz', 'Szymon'],
+      ['Ola', 'Mateusz'],
+
+    ];
+
+    function getWeeksSinceRotationStart(date) {
+      const diff = date - startRotation;
+      return Math.floor(diff / (7 * 24 * 60 * 60 * 1000));
+    }
+
+    function renderMonth() {
+      calendarEl.innerHTML = '';
+      const year = current.getFullYear();
+      const month = current.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const daysInMonth = lastDay.getDate();
+      const startDay = (firstDay.getDay() + 6) % 7; // Monday = 0
+
+      monthLabel.textContent = `${firstDay.toLocaleString('pl-PL', { month: 'long', year: 'numeric' })}`;
+
+      for (let i = 0; i < startDay; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'day';
+        calendarEl.appendChild(empty);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const dayEl = document.createElement('div');
+        dayEl.className = 'day';
+
+        const header = document.createElement('div');
+        header.className = 'day-header';
+        header.textContent = day;
+        dayEl.appendChild(header);
+
+        const content = document.createElement('div');
+        content.className = 'day-content';
+
+        if (date >= startRotation) {
+          const weeksSinceStart = getWeeksSinceRotationStart(date);
+          const [person1, person2] = rotations[weeksSinceStart % rotations.length];
+          const weekday = (date.getDay() + 6) % 7; // Monday = 0
+
+          let person = '';
+          if (weekday === 0) person = person1;
+          else if (weekday === 3) person = person2;
+
+          if (person) {
+            content.textContent = person;
+            if (person === 'Ola') content.classList.add('ola');
+            if (person === 'Szymon') content.classList.add('szymon');
+            if (person === 'Mateusz') content.classList.add('mateusz');
+          }
+        }
+
+        dayEl.appendChild(content);
+        calendarEl.appendChild(dayEl);
+      }
+    }
+
+    document.getElementById('prevMonth').addEventListener('click', () => {
+      current.setMonth(current.getMonth() - 1);
+      if (current < new Date(2025, 9, 1)) current.setTime(new Date(2025, 9, 1).getTime());
+      renderMonth();
+    });
+
+    document.getElementById('nextMonth').addEventListener('click', () => {
+      current.setMonth(current.getMonth() + 1);
+      if (current > end) current.setTime(end.getTime());
+      renderMonth();
+    });
+
+    renderMonth();
+  </script>
+</body>
+</html>
